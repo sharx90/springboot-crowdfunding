@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" >
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+	  <th:block th:include="~{/commons/common :: css}"></th:block>
+	  <link rel="stylesheet" th:href="@{/static/css/main.css}" href="css/main.css">
+
+	  <style>
+	.tree li {
+        list-style-type: none;
+		cursor:pointer;
+	}
+	table tbody tr:nth-child(odd){background:#F4F4F4;}
+	table tbody td:nth-child(even){color:#C00;}
+	</style>
+  </head>
+
+  <body>
+
+  <!-- 排头导航 -->
+  <div th:replace="~{/commons/common :: top}"></div>
+
+  <div class="container-fluid">
+      <div class="row">
+		  <!-- 侧边栏导航 -->
+		  <div th:replace="~{/commons/common :: sidebar('user')}"></div>
+
+		  <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+			<div class="panel panel-default">
+			  <div class="panel-heading">
+				<h3 class="panel-title"><i class="glyphicon glyphicon-th"></i> 数据列表</h3>
+			  </div>
+			  <div class="panel-body">
+<form th:action="@{/user/index}" class="form-inline" style="float:left;">
+  <div class="form-group has-feedback">
+    <div class="input-group">
+      <div class="input-group-addon">查询条件</div>
+      <input class="form-control has-success" name="search" th:value="${param.search != null ? param.search:''}" type="text" placeholder="请输入查询条件">
+    </div>
+  </div>
+  <button type="submit" class="btn btn-warning"><i class="glyphicon glyphicon-search"></i> 查询</button>
+</form>
+<button type="button" id="batchDelete" class="btn btn-danger" style="float:right;margin-left:10px;"><i class=" glyphicon glyphicon-remove"></i> 删除</button>
+<button type="button" class="btn btn-primary" style="float:right;" th:onclick="|window.location.href='@{/user/toAdd}'|"><i class="glyphicon glyphicon-plus"></i> 新增</button>
+<br>
+ <hr style="clear:both;">
+          <div class="table-responsive">
+            <table class="table  table-bordered">
+              <thead>
+                <tr >
+                  <th width="30">#</th>
+				  <th width="30"><input type="checkbox" id="deleteAllChecked"></th>
+                  <th>账号</th>
+                  <th>名称</th>
+                  <th>邮箱地址</th>
+                  <th width="100">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="admin,status : ${pageInfo.list}">
+                    <td>[[${status.index + 1}]]</td>
+                    <td><input type="checkbox" class="deleteChecked" th:value="${admin.id}"></td>
+                    <td>[[${admin.loginacct}]]</td>
+                    <td>[[${admin.username}]]</td>
+                    <td>[[${admin.email}]]</td>
+                    <td>
+                        <a th:href="@{/user/toAssign(id=${admin.id})}" class="btn btn-success btn-xs"><i class=" glyphicon glyphicon-check"></i></a>
+                        <a th:href="|@{/user/edit/}${admin.id}?pageNum=${pageInfo.pageNum}|" class="btn btn-primary btn-xs"><i class=" glyphicon glyphicon-pencil"></i></a>
+                        <button type="button" th:delid="${admin.id}" class="btn btn-danger btn-xs deleteBtn"><i class=" glyphicon glyphicon-remove"></i></button>
+                    </td>
+                </tr>
+              </tbody>
+			  <tfoot>
+			     <tr >
+				     <td colspan="6" align="center">
+						<ul class="pagination">
+<!--                            <li th:if="${pageInfo.hasPreviousPage}"><a href="#">上一页</a></li>-->
+                            <li th:classappend="${pageInfo.hasPreviousPage ? '':'disabled'}">
+                                <a href="#" th:href="@{/user/index(pageNum=${pageInfo.prePage},search=${param.search})}">上一页</a>
+                            </li>
+
+                            <li th:classappend="${num == pageInfo.pageNum} ? 'active':''"
+                                th:each="num : ${pageInfo.navigatepageNums}" >
+                                <a href="#" th:href="@{/user/index(pageNum=${num},search=${param.search})}">[[${num}]]</a>
+                            </li>
+
+<!--                            <li th:if="${pageInfo.hasNextPage}"><a href="#">下一页</a></li>-->
+                            <li th:classappend="${pageInfo.hasNextPage} ? '':'disabled'">
+                                <a href="#" th:href="@{/user/index(pageNum=${pageInfo.nextPage},search=${param.search})}">下一页</a>
+                            </li>
+						</ul>
+					 </td>
+				 </tr>
+
+			  </tfoot>
+            </table>
+          </div>
+			  </div>
+			</div>
+        </div>
+      </div>
+    </div>
+
+  <!-- JS -->
+  <th:block th:include="~{/commons/common :: js}"></th:block>
+  <script th:src="@{/static/script/docs.min.js}" src="script/docs.min.js"></script>
+  <script th:src="@{/static/layer/layer.js}" ></script>
+
+        <script type="text/javascript">
+            $(function () {
+			    $(".list-group-item").click(function(){
+				    if ( $(this).find("ul") ) {
+						$(this).toggleClass("tree-closed");
+						if ( $(this).hasClass("tree-closed") ) {
+							$("ul", this).hide("fast");
+						} else {
+							$("ul", this).show("fast");
+						}
+					}
+				});
+            });
+
+            //批量删除
+            $("#batchDelete").click(function () {
+
+                if($(".deleteChecked:checked").length == 0){
+                    layer.msg("请选择要删除的对象")
+                    return false;
+                }
+
+                let param = "";
+
+                // 获取选中元素的 id 值
+                $(".deleteChecked:checked").each(function (index) {
+                    if(index == 0){
+                        param += "ids=" + $(this).val();
+                    }else {
+                        param += "&ids=" + $(this).val();
+                    }
+                })
+                //console.log(param);
+
+                layer.confirm("是否确定删除?",function () {
+                    let index;
+                    // 进行删除操作
+                    $.ajax({
+                        url: "[[@{/user/batchDelete}]]",
+                        method: "post",
+                        data: param,
+                        dataType: "json",
+                        beforeSend: function(){
+                            index = layer.load({time: 20000});
+                        },
+                        success: function (result) {
+                            layer.close(index);
+
+                            if(result.code == 200){
+                                layer.alert("删除成功",{icon: 6,anim: 5},function () {
+
+                                    // 删除成功后重新加载当前页面
+                                    window.location.reload();
+                                })
+                                return false;
+                            }
+                            layer.msg(result.msg,{icon: 5,anim: 5})
+                        },
+                        error: function () {
+                            layer.close(index);
+                            layer.msg("系统异常,请稍后重试",{time: 2000})
+                        }
+                    })
+
+                },function () {
+                    layer.msg("取消")
+                })
+
+            })
+
+            // 单独选择
+            $(".deleteChecked").click(function () {
+                $("#deleteAllChecked").prop("checked",$(".deleteChecked").length == $(".deleteChecked:checked").length);
+            })
+            // 全选/全不选
+            $("#deleteAllChecked").click(function () {
+                $(".deleteChecked").prop("checked",$(this).prop("checked"));
+            })
+
+            // 删除
+            $(".deleteBtn").click(function () {
+
+                let id = $(this).attr("delid");
+                console.log(id);
+
+                layer.confirm("是否确定删除?",function () {
+                    let index;
+                    // 进行删除操作
+                    $.ajax({
+                        url: "[[@{/user/edit/}]]"+ id,
+                        method: "post",
+                        data: "_method=delete",
+                        dataType: "json",
+                        beforeSend: function(){
+                            index = layer.load({time: 20000});
+                        },
+                        success: function (result) {
+                            layer.close(index);
+
+                            if(result.code == 200){
+                                layer.alert("删除成功",{icon: 6,anim: 5},function () {
+
+                                    // 删除成功后重新加载当前页面
+                                    window.location.reload();
+                                })
+                                return false;
+                            }
+                            layer.msg(result.msg,{icon: 5,anim: 5})
+                        },
+                        error: function () {
+                            layer.close(index);
+                            layer.msg("系统异常,请稍后重试",{time: 2000})
+                        }
+                    })
+
+                },function () {
+                    layer.msg("取消")
+                })
+
+            })
+
+
+        </script>
+  </body>
+</html>

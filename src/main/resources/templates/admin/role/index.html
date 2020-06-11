@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" >
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+	  <th:block th:include="~{/commons/common :: css}"></th:block>
+	  <link rel="stylesheet" th:href="@{/static/css/main.css}" href="css/main.css">
+
+	<style>
+	.tree li {
+        list-style-type: none;
+		cursor:pointer;
+	}
+	table tbody tr:nth-child(odd){background:#F4F4F4;}
+	table tbody td:nth-child(even){color:#C00;}
+	</style>
+  </head>
+
+  <body th:data-path="@{/}">
+
+  <!-- 排头导航 -->
+  <div th:replace="~{/commons/common :: top}"></div>
+
+  <div class="container-fluid">
+      <div class="row">
+
+		  <!-- 侧边栏导航 -->
+		  <div th:replace="~{/commons/common :: sidebar('role')}"></div>
+
+		  <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+			<div class="panel panel-default">
+			  <div class="panel-heading">
+				<h3 class="panel-title"><i class="glyphicon glyphicon-th"></i> 数据列表</h3>
+			  </div>
+			  <div class="panel-body">
+<form class="form-inline" role="form" style="float:left;">
+  <div class="form-group has-feedback">
+    <div class="input-group">
+      <div class="input-group-addon" >查询条件</div>
+      <input class="form-control has-success" id="search" name="search" type="text" placeholder="请输入查询条件">
+      <input style='display:none' />
+    </div>
+  </div>
+  <button type="button" id="searchBtn" class="btn btn-warning"><i class="glyphicon glyphicon-search"></i> 查询</button>
+</form>
+<button type="button" class="btn btn-danger" style="float:right;margin-left:10px;"><i class=" glyphicon glyphicon-remove"></i> 删除</button>
+<button type="button" class="btn btn-primary" style="float:right;" onclick="window.location.href='form.html'"><i class="glyphicon glyphicon-plus"></i> 新增</button>
+<br>
+ <hr style="clear:both;">
+          <div class="table-responsive">
+            <table class="table table-bordered role-table">
+              <thead>
+                <tr >
+                  <th width="30">#</th>
+				  <th width="30"><input type="checkbox"></th>
+                  <th>名称</th>
+                  <th width="100">操作</th>
+                </tr>
+              </thead>
+			  <tbody>
+
+			  </tbody>
+			  <tfoot>
+			     <tr >
+				     <td colspan="6" align="center">
+						<ul class="pagination nav-pages">
+						</ul>
+					 </td>
+				 </tr>
+
+			  </tfoot>
+            </table>
+          </div>
+			  </div>
+			</div>
+        </div>
+      </div>
+    </div>
+
+  <!-- JS -->
+  <th:block th:include="~{/commons/common :: js}"></th:block>
+  <script th:src="@{/static/script/docs.min.js}" src="script/docs.min.js"></script>
+  <script th:src="@{/static/layer/layer.js}" ></script>
+
+        <script type="text/javascript">
+            $(function () {
+			    $(".list-group-item").click(function(){
+				    if ( $(this).find("ul") ) {
+						$(this).toggleClass("tree-closed");
+						if ( $(this).hasClass("tree-closed") ) {
+							$("ul", this).hide("fast");
+						} else {
+							$("ul", this).show("fast");
+						}
+					}
+				});
+            });
+
+			// 访问角色列表映射的参数
+			var param = {
+				'pageNum': 1,
+				'pageSize': 2
+			}
+
+            initData(1); // 初始异步加载数据
+
+            // 条件查询  ---  开始
+            $("#search").keyup(function (event) {
+                // console.log(event);
+                if(event.keyCode == 13){
+                    search();
+                }
+                event.stopPropagation();
+            })
+
+            $("#searchBtn").click(function () {
+                search();
+            })
+            function search() {
+                let search = $("#search").val();
+
+                // 设置条件查询参数
+                param.search = search;
+
+                initData(1); // 查询第一页数据
+            }
+            // 条件查询  ---  结束
+
+
+			// 异步加载数据函数   ---  开始
+			function initData(num) {
+
+				param.pageNum = num;
+
+				let index;
+
+                // console.log(param);
+
+				// 发送异步请求
+				$.ajax({
+                    url: "[[@{/role/asyncData}]]",
+                    method: "post",
+                    data: param,
+                    dataType: "json",// 响应类型
+					beforeSend: function(){
+						index = layer.load(2,{time: 20000});// 加载效果 20s 后自动关闭
+					},
+					success: function (result) {// result.data == pageInfo
+						layer.close(index);
+
+						//console.log(result);
+						// 数据显示
+						showData(result.data);
+
+						// 显示分页导航
+						showNavPages(result.data);
+
+					},
+					error: function () {
+						layer.close(index);
+						layer.alert("系统异常,加载数据失败! 请刷新页面")
+					}
+				})
+			}
+			// 异步加载数据函数   ---  结束
+
+			// 数据显示  ---  开始
+			function showData(data) {
+
+                let tbody = $(".role-table tbody");
+                tbody.empty();// 清空子元素
+
+                if(data.list.length != 0){
+
+                    $(data.list).each(function (index) {
+
+                        tbody.append('<tr> ' +
+                            '<td>'+ (index+1) +'</td> ' +
+                            '<td><input type="checkbox"></td> ' +
+                            '<td>'+ (this.name) +'</td> ' +
+                            '<td> ' +
+                            '<a type="button" href="'+ $("body").attr("data-path") +'role/toPermission?id='+this.id+'" class="btn btn-success btn-xs"><i class=" glyphicon glyphicon-check"></i></a> ' +
+                            '<button type="button" class="btn btn-primary btn-xs"><i class=" glyphicon glyphicon-pencil"></i></button> ' +
+                            '<button type="button" class="btn btn-danger btn-xs"><i class=" glyphicon glyphicon-remove"></i></button> ' +
+                            '</td> ' +
+                            '</tr>');
+                    })
+                }else{
+                    tbody.append('<tr><td colspan="4" class="text-center">没有查询到指定的内容</td></tr>');
+                }
+
+			}
+			// 数据显示  ---  结束
+
+
+			// 显示分页导航  ---  开始
+
+			/*
+				<li class="disabled"><a href="#">上一页</a></li>
+				<li><a href="#">下一页</a></li>
+			 */
+			function showNavPages(data) {
+
+				let ulNode = $(".nav-pages");
+				ulNode.empty();
+
+				if(data.pages != 0){
+                    // 是否有上一页
+                    if(data.hasPreviousPage){
+                        ulNode.append('<li onclick="initData('+ data.prePage +')"><a href="javascript:;">上一页</a></li>');
+                    }else{
+                        ulNode.append('<li onclick="initData('+ data.prePage +')" class="disabled"><a href="javascript:;">上一页</a></li>');
+                    }
+
+                    $(data.navigatepageNums).each(function () {
+                        if(this == data.pageNum){
+                            ulNode.append('<li class="active" onclick="initData('+ this +')"><a href="javascript:;">'+ this +'</a></li>');
+                        }else{
+                            ulNode.append('<li onclick="initData('+ this +')"><a href="javascript:;">'+ this +'</a></li>');
+                        }
+                    })
+
+                    // 是否有下一页
+                    if(data.hasNextPage){
+                        ulNode.append('<li onclick="initData('+ data.nextPage +')"><a href="javascript:;">下一页</a></li>');
+                    }else{
+                        ulNode.append('<li class="disabled" onclick="initData('+ data.nextPage +')"><a href="javascript:;">下一页</a></li>');
+                    }
+                }
+
+			}
+			// 显示分页导航  ---  结束
+
+        </script>
+  </body>
+</html>

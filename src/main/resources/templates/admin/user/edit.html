@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" >
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+	  <th:block th:include="~{/commons/common :: css}"></th:block>
+	  <link rel="stylesheet" th:href="@{/static/css/main.css}" href="css/main.css">
+
+	  <style>
+	.tree li {
+        list-style-type: none;
+		cursor:pointer;
+	}
+	</style>
+  </head>
+
+  <body>
+
+  <!-- 排头导航 -->
+  <div th:replace="~{/commons/common :: top}"></div>
+
+  <div class="container-fluid">
+      <div class="row">
+		  <!-- 侧边栏导航 -->
+		  <div th:replace="~{/commons/common :: sidebar('user')}"></div>
+
+		  <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+				<ol class="breadcrumb">
+				  <li><a href="#">首页</a></li>
+				  <li><a href="#">数据列表</a></li>
+				  <li class="active">新增</li>
+				</ol>
+			<div class="panel panel-default">
+              <div class="panel-heading">表单数据<div style="float:right;cursor:pointer;" data-toggle="modal" data-target="#myModal"><i class="glyphicon glyphicon-question-sign"></i></div></div>
+			  <div class="panel-body">
+				<form role="form" id="edit-form" th:action="@{/user/edit}" method="post">
+				  <input th:if="${admin != null}" type="hidden" name="_method" value="put">
+				  <input th:if="${admin != null}" type="hidden" name="id" th:value="${admin.id}">
+				  <input th:if="${param.pageNum != null}" type="hidden" name="pageNum" th:value="${param.pageNum}">
+				  <div class="form-group">
+					<label for="loginacct">登陆账号</label>
+					<input type="text" class="form-control" th:value="${admin != null} ? ${admin.loginacct}:''" name="loginacct" id="loginacct" placeholder="请输入登陆账号">
+				  </div>
+				  <div class="form-group">
+					<label for="username">用户名称</label>
+					<input type="text" class="form-control" th:value="${admin != null} ? ${admin.username}:''" name="username" id="username" placeholder="请输入用户名称">
+				  </div>
+				  <div class="form-group">
+					<label for="email">邮箱地址</label>
+					<input type="email" class="form-control" th:value="${admin != null} ? ${admin.email}:''" name="email" id="email" placeholder="请输入邮箱地址">
+					<p class="help-block label label-warning">请输入合法的邮箱地址, 格式为： xxxx@xxxx.com</p>
+				  </div>
+				  <button type="button" id="editBtn" class="btn btn-success"><i class="glyphicon glyphicon-plus"></i> [[${admin != null} ? '修改':'新增']]</button>
+				  <button type="reset" class="btn btn-danger"><i class="glyphicon glyphicon-refresh"></i> 重置</button>
+				</form>
+			  </div>
+			</div>
+        </div>
+      </div>
+    </div>
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+			<h4 class="modal-title" id="myModalLabel">帮助</h4>
+		  </div>
+		  <div class="modal-body">
+			<div class="bs-callout bs-callout-info">
+				<h4>测试标题1</h4>
+				<p>测试内容1，测试内容1，测试内容1，测试内容1，测试内容1，测试内容1</p>
+			  </div>
+			<div class="bs-callout bs-callout-info">
+				<h4>测试标题2</h4>
+				<p>测试内容2，测试内容2，测试内容2，测试内容2，测试内容2，测试内容2</p>
+			  </div>
+		  </div>
+		  <!--
+		  <div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			<button type="button" class="btn btn-primary">Save changes</button>
+		  </div>
+		  -->
+		</div>
+	  </div>
+	</div>
+  <!-- JS -->
+  <th:block th:include="~{/commons/common :: js}"></th:block>
+  <script th:src="@{/static/script/docs.min.js}" src="script/docs.min.js"></script>
+  <script th:src="@{/static/layer/layer.js}" ></script>
+
+	<script type="text/javascript">
+		$(function () {
+			$(".list-group-item").click(function(){
+				if ( $(this).find("ul") ) {
+					$(this).toggleClass("tree-closed");
+					if ( $(this).hasClass("tree-closed") ) {
+						$("ul", this).hide("fast");
+					} else {
+						$("ul", this).show("fast");
+					}
+				}
+			});
+
+			$("#editBtn").click(function () {
+
+				// 省略验证
+
+				let editForm = $("#edit-form");
+				let param = editForm.serialize();
+
+				let index;
+
+				// 异步
+				$.ajax({
+					url: editForm.attr("action"),
+					method: "post",
+					data: param,
+					dataType: "json",
+					beforeSend: function(){
+						index = layer.load({time: 20000});
+					},
+					success: function (result) {// result 响应的数据
+						layer.close(index);
+
+						if(result.code == 200){
+							layer.alert("操作成功,点击确定跳转用户列表页面",{icon: 6,anim: 5},function () {
+								window.location.href = result.data;
+							})
+							return false;
+						}
+						layer.msg(result.msg,{icon: 5,anim: 5})
+					},
+					error: function () {
+						layer.close(index);
+						layer.msg("系统异常,请稍后重试",{time: 2000})
+					}
+				})
+			})
+		});
+	</script>
+  </body>
+</html>

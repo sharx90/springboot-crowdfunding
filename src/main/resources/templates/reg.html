@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keys" content="">
+    <meta name="author" content="">
+
+      <th:block th:include="~{/commons/common :: css}"></th:block>
+      <link rel="stylesheet" th:href="@{/static/css/login.css}" href="css/login.css">
+
+    <style>
+
+	</style>
+  </head>
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <div><a class="navbar-brand" href="index.html" style="font-size:32px;">尚筹网-创意产品众筹平台</a></div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+
+      <form id="reg-form" class="form-signin" th:action="@{/doReg}" method="post">
+        <h2 class="form-signin-heading"><i class="glyphicon glyphicon-log-in"></i> 用户注册</h2>
+		  <div class="form-group has-success has-feedback">
+			<input type="text" class="form-control" name="loginacct" id="loginacct" placeholder="手机号" autofocus>
+			<span class="glyphicon glyphicon-phone form-control-feedback"></span>
+		  </div>
+
+          <!-- 获取验证码 -->
+          <div class="form-group has-success" style="width: 60%;display: inline-block">
+              <input type="text" class="form-control" name="code" id="code" placeholder="验证码" autofocus>
+          </div>
+          <button id="sendBtn" type="button" class="btn btn-default" style="height: 44px;margin-left: 3px;padding: 6px 20px">发送验证码</button>
+
+		  <div class="form-group has-success has-feedback">
+			<input type="text" class="form-control" name="userpswd" id="userpswd" placeholder="请输入登录密码" style="margin-top:10px;">
+			<span class="glyphicon glyphicon-lock form-control-feedback"></span>
+		  </div>
+          <div class="form-group has-success has-feedback">
+              <input type="text" class="form-control" name="username" id="username" placeholder="请输入用户名" autofocus>
+              <span class="glyphicon glyphicon-user form-control-feedback"></span>
+          </div>
+		  <div class="form-group has-success has-feedback">
+			<input type="text" class="form-control" name="email" id="email" placeholder="请输入邮箱地址" style="margin-top:10px;">
+			<span class="glyphicon glyphicon glyphicon-envelope form-control-feedback"></span>
+		  </div>
+		  <div class="form-group has-success has-feedback">
+			<select class="form-control" >
+                <option>企业</option>
+                <option selected>个人</option>
+            </select>
+		  </div>
+        <div class="checkbox">
+          <label>
+            忘记密码
+          </label>
+          <label style="float:right">
+            <a href="login.html" th:href="@{/tologin}">我有账号</a>
+          </label>
+        </div>
+        <button id="regBtn" type="button" class="btn btn-lg btn-success btn-block"> 注册</button>
+      </form>
+    </div>
+
+    <th:block th:include="~{/commons/common :: js}"></th:block>
+    <script th:src="@{/static/layer/layer.js}" ></script>
+
+    <script>
+
+        var index; // 表示发送验证码的循环函数的下标
+        // 发送验证码
+        $("#sendBtn").click(function () {
+
+            let phone = $("#loginacct").val();
+            if(phone==''){
+                layer.msg("请输入手机号",{icon: 5,anim: 6})
+                return false;
+            }
+            // 判断手机号是否合法
+            let reg = /^1[3589]\d{9}$/;
+            if(!reg.test(phone)){
+                layer.msg("手机号不合法",{icon: 5,anim: 6})
+                return false;
+            }
+
+            // 点击获取后,不能再点
+            $(this).prop("disabled",true);
+
+            // 发送时按钮的文本发生变化
+            // 定时调用 设置点击后的效果
+            index = window.setInterval(function () {
+                changeText();
+            },1000)
+
+            // 发送异步请求获取验证码
+            $.ajax({
+                url: "[[@{/getCode}]]",
+                method: "post",
+                data: "phone="+phone,
+                dataType: "JSON",
+                success: function (result) {
+                    console.log(result);
+                }
+            })
+
+        });
+
+
+        var time = 10; // 表示倒计时时间
+        function changeText() {
+            time--;
+            if(time <= 0){
+                // 停止 定时函数
+                window.clearInterval(index);
+                // 设置倒计时还原
+                time = 10;
+                $("#sendBtn").text("点击获取");
+                // 倒计时结束后,设置为允许点击
+                $("#sendBtn").prop("disabled",false);
+                return;
+            }
+            $("#sendBtn").text(time+" 秒后重发");
+        }
+
+        // 注册
+        $("#regBtn").click(function () {
+
+            let phone = $("#loginacct").val();
+            if(phone==''){
+                layer.msg("请输入手机号",{icon: 5,anim: 6})
+                return false;
+            }
+
+            let code = $("#code").val();
+            if(code==''){
+                layer.msg("请输入验证码",{icon: 5,anim: 6})
+                return false;
+            }
+            // ...
+
+            let regForm = $("#reg-form");
+            let param = regForm.serialize();
+
+            let index; // 注册时 layer 加载的下标
+
+            // 发送异步请求获取验证码
+            $.ajax({
+                url: regForm.attr("action"),
+                method: "post",
+                data: param,
+                dataType: "JSON",
+                beforeSend: function(){
+                    index = layer.load("正在注册中...",{icon: 16,time: 20000})
+                },
+                success: function (result) {
+                    layer.close(index);
+                    console.log(result);
+                    if(result.code == 200){
+                        layer.alert("注册成功,点击确定跳转登录页面",{icon: 6,anim: 5},function () {
+                            window.location.href = result.data;
+                        })
+                        return false;
+                    }
+                    layer.msg(result.msg,{icon: 5,anim: 5})
+                },
+                error: function () {
+                    layer.close(index);
+                    layer.msg("系统异常,请稍后重试",{time: 2000})
+                }
+            })
+
+
+        })
+
+    </script>
+
+  </body>
+</html>

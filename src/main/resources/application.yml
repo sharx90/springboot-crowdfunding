@@ -1,0 +1,35 @@
+server:
+  port: 8989
+  servlet:
+    context-path: /scw
+
+spring:
+  thymeleaf:
+    cache: false  # 禁用模板引擎缓存
+
+  # 数据库连接配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/crowdfunding?serverTimezone=Hongkong&useSSL=false&useUnicode=true&characterEncoding=UTF-8
+    username: root
+    password: root
+  #security配置
+  security:
+    user:
+      name: user
+      password: 123
+      roles: 学徒
+
+# Mybatis 配置
+mybatis:
+  config-location: classpath:mybatis/mybatis-config.xml
+  mapper-locations: classpath:mybatis/mapper/*
+
+# 短信接口配置
+sms:
+  product: Dysmsapi
+  domain: dysmsapi.aliyuncs.com
+  accessKeyId: LTAI4GKJ3hAqJ2Yw7aU4gLro
+  accessKeySecret: vjRE4fViqkvkVYxcMggJNpczn6vw4M
+  signName: '新琴'
+  templateCode: SMS_142060233

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keys" content="">
+    <meta name="author" content="">
+      <th:block th:include="~{/commons/common :: css}"></th:block>
+    <link rel="stylesheet" th:href="@{/static/css/login.css}" href="css/login.css">
+    <style>
+
+	</style>
+  </head>
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <div><a class="navbar-brand" href="index.html" style="font-size:32px;">尚筹网-创意产品众筹平台</a></div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+
+      <form id="login-form" class="form-signin" th:action="@{/doLogin}" method="post">
+        <h2 class="form-signin-heading"><i class="glyphicon glyphicon-log-in"></i> 用户登录</h2>
+		  <div class="form-group has-success has-feedback">
+			<input type="text" class="form-control" name="loginacct" id="loginacct" placeholder="请输入登录账号" autofocus>
+			<span class="glyphicon glyphicon-user form-control-feedback"></span>
+		  </div>
+		  <div class="form-group has-success has-feedback">
+			<input type="text" class="form-control" name="userpswd" id="userpswd" placeholder="请输入登录密码" style="margin-top:10px;">
+			<span class="glyphicon glyphicon-lock form-control-feedback"></span>
+		  </div>
+		  <div class="form-group has-success has-feedback">
+			<select class="form-control" >
+                <option value="member">会员</option>
+                <option value="user" selected>管理</option>
+            </select>
+		  </div>
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" value="remember-me"> 记住我
+          </label>
+          <br>
+          <label>
+            忘记密码
+          </label>
+          <label style="float:right">
+            <a href="reg.html" th:href="@{/toReg}">我要注册</a>
+          </label>
+        </div>
+        <button type="button" class="btn btn-lg btn-success btn-block" onclick="doLogin()" > 登录</button>
+      </form>
+    </div>
+
+    <th:block th:include="~{/commons/common :: js}"></th:block>
+    <script th:src="@{/static/layer/layer.js}" ></script>
+    <script>
+
+    function doLogin() {
+
+        // 验证账户与密码是否输入
+        let loginacct =  $("#loginacct").val();
+        if(loginacct == ''){
+            layer.msg('请输入帐户名', {icon: 5,anim: 0});
+            return false;
+        }
+
+        let userpswd =  $("#userpswd").val();
+        if(userpswd == ''){
+            layer.msg('请输入密码', {icon: 5,anim: 0});
+            return false;
+        }
+
+        // 获取登录表单数据
+        let param = $("#login-form").serialize();
+
+        let index;
+
+        // 发送异步请求
+        $.ajax({
+            url: $("#login-form").attr("action"),
+            method: "post",
+            data: param,
+            dataType: "JSON",
+            beforeSend: function(){
+                //加载层-默认风格
+                index = layer.load();
+            },
+            success: function (result) {
+                // 响应成功后关闭
+                layer.close(index);
+
+                console.log(result);
+                if(result.code != 200){
+                    layer.alert(result.msg,{icon: 5,anim: 6});
+                    return false;
+                }
+
+                // 登录成功,跳转页面
+                window.location.href = result.data;
+
+            },
+            error: function (result) {
+                // 响应成功后关闭
+                layer.close(index);
+
+                layer.msg('系统服务异常');
+            }
+
+        })
+
+
+    }
+    </script>
+  </body>
+</html>
