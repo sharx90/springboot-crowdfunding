@@ -39,4 +39,15 @@ public interface TRoleMapper {
      */
     @Select("select permissionid from t_role_permission where roleid = #{id}")
     List<Integer> selectAssignPermission(Integer id);
+
+    /**
+     * 查询用户所有角色
+     * @param id
+     * @return
+     */
+    @Select("select r.* from t_role r " +
+            "LEFT JOIN t_admin_role ta on ta.roleid = r.id " +
+            "where ta.adminid = #{id}")
+    List<TRole> selectAdminToRoles(Integer id);
+
 }

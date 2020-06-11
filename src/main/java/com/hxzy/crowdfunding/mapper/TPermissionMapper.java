@@ -3,6 +3,7 @@ package com.hxzy.crowdfunding.mapper;
 import com.hxzy.crowdfunding.bean.TPermission;
 import com.hxzy.crowdfunding.bean.TPermissionExample;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -30,4 +31,15 @@ public interface TPermissionMapper {
     int updateByPrimaryKeySelective(TPermission record);
 
     int updateByPrimaryKey(TPermission record);
+
+    /**
+     * 查询指定用户所有权限
+     * @param id
+     * @return
+     */
+    @Select("select DISTINCT p.* from t_admin_role ta " +
+            "LEFT JOIN t_role_permission tr on ta.roleid = tr.roleid " +
+            "LEFT JOIN t_permission p on p.id = tr.permissionid " +
+            "where ta.adminid = #{id} ")
+    List<TPermission> selectAdminToPermissions(Integer id);
 }

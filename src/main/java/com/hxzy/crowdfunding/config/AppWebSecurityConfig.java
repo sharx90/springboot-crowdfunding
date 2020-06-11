@@ -2,14 +2,19 @@ package com.hxzy.crowdfunding.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hxzy.crowdfunding.util.ResponseData;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.*;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import javax.servlet.http.HttpSession;
 
 @Configuration
+@EnableWebSecurity
 public class AppWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
@@ -65,4 +70,20 @@ public class AppWebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf().disable();// 禁用 csrf （不建议禁用）
     }
 
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public MyUserDetailService myUserDetailService(){
+        return new MyUserDetailService();
+    }
+
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        //super.configure(auth);
+        auth.userDetailsService(myUserDetailService()).passwordEncoder(passwordEncoder());
+    }
 }
