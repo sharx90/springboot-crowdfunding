@@ -51,9 +51,7 @@ public class MyUserDetailService implements UserDetailsService {
 
             List<TRole> roles = tRoleMapper.selectAdminToRoles(tAdmin.getId());
 
-
             List<TPermission> permissions = tPermissionMapper.selectAdminToPermissions(tAdmin.getId());
-
 
             Set<GrantedAuthority> authorities = new HashSet<>();
             for (TRole role : roles) {

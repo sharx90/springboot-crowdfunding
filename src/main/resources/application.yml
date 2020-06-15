@@ -14,11 +14,11 @@ spring:
     username: root
     password: root
   #security配置
-  security:
-    user:
-      name: user
-      password: 123
-      roles: 学徒
+#  security:
+#    user:
+#      name: user
+#      password: 123
+#      roles: 学徒
 
 # Mybatis 配置
 mybatis:
