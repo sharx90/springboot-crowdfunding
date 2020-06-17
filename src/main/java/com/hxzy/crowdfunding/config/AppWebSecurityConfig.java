@@ -55,7 +55,7 @@ public class AppWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.authorizeRequests()
                 // 设置指定的映射路径不认证
-                .antMatchers("/static/**","/index","/","/tologin").permitAll()
+                .antMatchers("/static/**","/index","/","/tologin","/toReg","/doReg","/getCode").permitAll()
                 .anyRequest().authenticated();
 
         // 当前没有权限是访问的页面地址

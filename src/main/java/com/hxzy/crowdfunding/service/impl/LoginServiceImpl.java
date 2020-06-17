@@ -12,10 +12,13 @@ import com.hxzy.crowdfunding.service.LoginService;
 import com.hxzy.crowdfunding.util.MD5Util;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -30,6 +33,8 @@ public class LoginServiceImpl implements LoginService {
     @Autowired
     private TMemberMapper tMemberMapper;
 
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
     // 登录验证
     @Override
     public void login(String loginacct, String userpswd, HttpSession session) {
@@ -80,7 +85,8 @@ public class LoginServiceImpl implements LoginService {
 
             if("OK".equals(smsResponse.getCode())){
                 // 将验证码保存至 session
-                session.setAttribute("yzm", code);
+                ValueOperations<String, String> ops = stringRedisTemplate.opsForValue();
+                ops.set(phone,code,5, TimeUnit.MINUTES);
             }else{
                 log.error("获取验证码失败---{}",smsResponse.getMessage());
                 throw new RuntimeException("获取验证码失败");
@@ -96,8 +102,10 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public void doReg(TMember tMember, String code, HttpSession session) {
 
+        ValueOperations<String, String> ops = stringRedisTemplate.opsForValue();
+        String s = ops.get(tMember.getLoginacct());
         // 判断验证码是否正确
-        if(!code.equals(session.getAttribute("yzm"))){
+        if(!code.equals(s)){
             throw new RuntimeException("验证码错误");
         }
 

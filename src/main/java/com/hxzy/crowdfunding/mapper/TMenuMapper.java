@@ -2,7 +2,9 @@ package com.hxzy.crowdfunding.mapper;
 
 import com.hxzy.crowdfunding.bean.TMenu;
 import com.hxzy.crowdfunding.bean.TMenuExample;
+import com.hxzy.crowdfunding.vo.tMenuVo;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -30,4 +32,7 @@ public interface TMenuMapper {
     int updateByPrimaryKeySelective(TMenu record);
 
     int updateByPrimaryKey(TMenu record);
+
+    @Select("select * from t_menu where id > 0")
+    List<tMenuVo> selectMenuAll();
 }
